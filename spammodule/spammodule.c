@@ -1,5 +1,8 @@
 #include <Python.h>
 
+static PyObject *SpamError;
+static PyObject *SpamNotFound;
+
 static PyObject* spam_system(PyObject *self, PyObject *args)
 {
 	int ret;
@@ -9,6 +12,14 @@ static PyObject* spam_system(PyObject *self, PyObject *args)
 		return NULL;
 
 	ret = system(command);
+	if (0 != ret) {
+		if (ret < 0)
+			PyErr_SetString(SpamError, "system call failed");
+		else if (ret > 0)
+			PyErr_SetString(SpamNotFound, "command not found");
+		return NULL;
+	}
+
 	return Py_BuildValue("i", ret);
 }
 
@@ -24,4 +35,12 @@ PyMODINIT_FUNC initspammodule(void)
 	module = Py_InitModule("spammodule", SpamMethods);
 	if (NULL == module)
 		return;
+
+	SpamError = PyErr_NewException("spammodule.errorClass", NULL, NULL);
+	SpamNotFound = PyErr_NewException("spammodule.notfoundClass", NULL, NULL);
+	Py_INCREF(SpamError);
+	Py_INCREF(SpamNotFound);
+	PyModule_AddObject(module, "error", SpamError);
+	PyModule_AddObject(module, "notfound", SpamNotFound);
+
 }
