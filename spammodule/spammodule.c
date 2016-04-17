@@ -70,6 +70,8 @@ static PyMethodDef SpamMethods[] = {
 PyMODINIT_FUNC initspammodule(void)
 {
 	PyObject *module;
+	PyObject *version = PyString_FromString("1.0.0");
+	PyObject *author  = PyString_FromString("chenyao");
 
 	module = Py_InitModule("spammodule", SpamMethods);
 	if (NULL == module)
@@ -82,4 +84,6 @@ PyMODINIT_FUNC initspammodule(void)
 	PyModule_AddObject(module, "error", SpamError);
 	PyModule_AddObject(module, "notfound", SpamNotFound);
 
+	PyModule_AddObject(module, "version", version);
+	PyModule_AddObject(module, "author", author);
 }
