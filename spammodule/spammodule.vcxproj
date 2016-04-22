@@ -86,6 +86,9 @@
   <ItemGroup>
     <ClCompile Include="spammodule.c" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="spammodule.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

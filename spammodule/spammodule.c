@@ -1,8 +1,15 @@
 #include <Python.h>
 
+#define SPAM_MODULE
+#include "spammodule.h"
+
+static int PySpam_System(const char *command)
+{
+	return system(command);
+}
+
 static PyObject *SpamError;
 static PyObject *SpamNotFound;
-
 static PyObject* spam_system(PyObject *self, PyObject *args)
 {
 	int ret;
@@ -11,7 +18,7 @@ static PyObject* spam_system(PyObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "s", &command))
 		return NULL;
 
-	ret = system(command);
+	ret = PySpam_System(command);
 	if (0 != ret) {
 		if (ret < 0)
 			PyErr_SetString(SpamError, "system call failed");
@@ -73,12 +80,15 @@ PyMODINIT_FUNC initspammodule(void)
 	PyObject *version = PyString_FromString("1.0.0");
 	PyObject *author  = PyString_FromString("chenyao");
 
+	static void *PySpam_API[PySpam_API_pointers];
+	PyObject *c_api_object;
+
 	module = Py_InitModule("spammodule", SpamMethods);
 	if (NULL == module)
 		return;
 
-	SpamError = PyErr_NewException("spammodule.errorClass", NULL, NULL);
-	SpamNotFound = PyErr_NewException("spammodule.notfoundClass", NULL, NULL);
+	SpamError = PyErr_NewException("spam.errorClass", NULL, NULL);
+	SpamNotFound = PyErr_NewException("spam.notfoundClass", NULL, NULL);
 	Py_INCREF(SpamError);
 	Py_INCREF(SpamNotFound);
 	PyModule_AddObject(module, "error", SpamError);
@@ -86,4 +96,11 @@ PyMODINIT_FUNC initspammodule(void)
 
 	PyModule_AddObject(module, "version", version);
 	PyModule_AddObject(module, "author", author);
+
+	/* Initialize the C API pointer array */
+	PySpam_API[PySpam_System_NUM] = (void *)PySpam_System;
+	/* Create a Capsule containing the API pointer array's address */
+	c_api_object = PyCapsule_New((void *)PySpam_API, "spammodule._C_API", NULL);
+	if (c_api_object != NULL)
+		PyModule_AddObject(module, "_C_API", c_api_object);
 }
